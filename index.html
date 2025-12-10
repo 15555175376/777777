@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>谐波形态大全：可视化与解析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        h1 {
+            color: #60a5fa;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #60a5fa, #38bdf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .controls {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .pattern-btn {
+            padding: 12px 24px;
+            background-color: #334155;
+            color: #cbd5e1;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+            max-width: 200px;
+        }
+        
+        .pattern-btn:hover {
+            background-color: #475569;
+            transform: translateY(-2px);
+        }
+        
+        .pattern-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+        }
+        
+        .pattern-btn.bullish {
+            border-left: 4px solid #10b981;
+        }
+        
+        .pattern-btn.bearish {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .chart-container {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            height: 550px;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .pattern-title {
+            font-size: 1.8rem;
+            color: #f8fafc;
+        }
+        
+        .pattern-type {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .pattern-type.bullish {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .pattern-type.bearish {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .pattern-description {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .description-title {
+            color: #60a5fa;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .pattern-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .detail-box {
+            background-color: rgba(30, 41, 59, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .detail-title {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        .detail-content {
+            color: #e2e8f0;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        
+        .fib-ratios {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .fib-ratio {
+            padding: 4px 10px;
+            background-color: rgba(59, 130, 246, 0.2);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #93c5fd;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #334155;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 8px;
+            border-radius: 2px;
+        }
+        
+        .pattern-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .pattern-card {
+            background-color: #1e293b;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #334155;
+        }
+        
+        .pattern-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+        }
+        
+        .pattern-card-title {
+            font-size: 1.2rem;
+            color: #f8fafc;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .pattern-card-desc {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .pattern-btn {
+                max-width: 100%;
+            }
+            
+            .chart-container {
+                padding: 15px;
+                height: 450px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>谐波形态大全：可视化与解析</h1>
+            <p class="subtitle">探索经典谐波交易形态，包括加特利、蝙蝠、螃蟹、蝴蝶、AB=CD等形态的涨跌版本，以及头肩底/顶等传统形态。</p>
+        </header>
+        
+        <div class="controls">
+            <button class="pattern-btn bullish active" data-pattern="gartley-bullish">加特利形态 (看涨)</button>
+            <button class="pattern-btn bearish" data-pattern="gartley-bearish">加特利形态 (看跌)</button>
+            <button class="pattern-btn bullish" data-pattern="bat-bullish">蝙蝠形态 (看涨)</button>
+            <button class="pattern-btn bearish" data-pattern="bat-bearish">蝙蝠形态 (看跌)</button>
+            <button class="pattern-btn bullish" data-pattern="crab-bullish">螃蟹形态 (看涨)</button>
+            <button class="pattern-btn bearish" data-pattern="crab-bearish">螃蟹形态 (看跌)</button>
+            <button class="pattern-btn bullish" data-pattern="butterfly-bullish">蝴蝶形态 (看涨)</button>
+            <button class="pattern-btn bearish" data-pattern="butterfly-bearish">蝴蝶形态 (看跌)</button>
+            <button class="pattern-btn bullish" data-pattern="abcd-bullish">AB=CD形态 (看涨)</button>
+            <button class="pattern-btn bearish" data-pattern="abcd-bearish">AB=CD形态 (看跌)</button>
+            <button class="pattern-btn bullish" data-pattern="shark-bullish">鲨鱼形态 (看涨)</button>
+            <button class="pattern-btn bullish" data-pattern="head-shoulders">头肩底形态</button>
+            <button class="pattern-btn bearish" data-pattern="head-shoulders-top">头肩顶形态</button>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-header">
+                <h2 class="pattern-title" id="current-pattern-title">加特利形态 (看涨)</h2>
+                <span class="pattern-type bullish" id="current-pattern-type">看涨反转形态</span>
+            </div>
+            
+            <canvas id="harmonicChart" width="1200" height="400"></canvas>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #60a5fa;"></div>
+                    <span>价格走势</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #10b981;"></div>
+                    <span>看涨反转区</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ef4444;"></div>
+                    <span>看跌反转区</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #f59e0b;"></div>
+                    <span>关键点 (X, A, B, C, D)</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pattern-description">
+            <h3 class="description-title" id="description-title">加特利形态 (看涨) 解析</h3>
+            <p id="pattern-description-text">加特利形态是一种经典的五点谐波形态，由Harold M. Gartley在1935年首次提出。看涨加特利形态出现在下降趋势后，预示潜在的反转向上的机会。</p>
+            
+            <div class="pattern-details">
+                <div class="detail-box">
+                    <div class="detail-title">关键斐波那契比率</div>
+                    <div class="fib-ratios" id="fib-ratios">
+                        <span class="fib-ratio">B点: XA的0.618</span>
+                        <span class="fib-ratio">C点: AB的0.382-0.886</span>
+                        <span class="fib-ratio">D点: XA的0.786</span>
+                    </div>
+                </div>
+                
+                <div class="detail-box">
+                    <div class="detail-title">形态特征</div>
+                    <div class="detail-content" id="pattern-characteristics">形态呈现"M"或"W"形状，D点位于XA段的0.786回撤位，是潜在的反转区域。</div>
+                </div>
+                
+                <div class="detail-box">
+                    <div class="detail-title">交易信号</div>
+                    <div class="detail-content" id="trading-signal">在D点附近出现看涨K线形态(如锤子线、早晨之星)时，可考虑做多，止损设在D点下方。</div>
+                </div>
+                
+                <div class="detail-box">
+                    <div class="detail-title">形态精度</div>
+                    <div class="detail-content" id="pattern-accuracy">高 - 加特利形态是谐波交易中最常用且可靠的形态之一。</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pattern-description">
+            <h3 class="description-title">谐波形态概览</h3>
+            <div class="pattern-list">
+                <div class="pattern-card" data-pattern="gartley-bullish">
+                    <div class="pattern-card-title">加特利形态 <span class="pattern-type bullish">看涨</span></div>
+                    <div class="pattern-card-desc">最经典的谐波形态，由XA、AB、BC、CD四段构成，D点位于XA的0.786回撤位。</div>
+                </div>
+                
+                <div class="pattern-card" data-pattern="bat-bullish">
+                    <div class="pattern-card-title">蝙蝠形态 <span class="pattern-type bullish">看涨</span></div>
+                    <div class="pattern-card-desc">D点位于XA的0.886回撤位，形态更陡峭，B点通常超越XA的0.618回撤位。</div>
+                </div>
+                
+                <div class="pattern-card" data-pattern="crab-bullish">
+                    <div class="pattern-card-title">螃蟹形态 <span class="pattern-type bullish">看涨</span></div>
+                    <div class="pattern-card-desc">D点位于XA的1.618扩展位，B点回撤较浅(0.382以内)，反转精度极高。</div>
+                </div>
+                
+                <div class="pattern-card" data-pattern="butterfly-bullish">
+                    <div class="pattern-card-title">蝴蝶形态 <span class="pattern-type bullish">看涨</span></div>
+                    <div class="pattern-card-desc">D点位于XA的1.272或1.618扩展位，B点位于XA的0.786回撤位。</div>
+                </div>
+                
+                <div class="pattern-card" data-pattern="abcd-bullish">
+                    <div class="pattern-card-title">AB=CD形态 <span class="pattern-type bullish">看涨</span></div>
+                    <div class="pattern-card-desc">最简单的谐波形态，AB段与CD段在价格和时间上对称，C点位于AB的0.382-0.886回撤。</div>
+                </div>
+                
+                <div class="pattern-card" data-pattern="shark-bullish">
+                    <div class="pattern-card-title">鲨鱼形态 <span class="pattern-type bullish">看涨</span></div>
+                    <div class="pattern-card-desc">相对较新的形态，D点位于XA的1.13或1.618扩展位，B点回撤极浅(0.382以内)。</div>
+                </div>
+                
+                <div class="pattern-card" data-pattern="head-shoulders">
+                    <div class="pattern-card-title">头肩底形态 <span class="pattern-type bullish">看涨</span></div>
+                    <div class="pattern-card-desc">传统反转形态，由左肩、头部、右肩构成，突破颈线后形成看涨信号。</div>
+                </div>
+                
+                <div class="pattern-card" data-pattern="head-shoulders-top">
+                    <div class="pattern-card-title">头肩顶形态 <span class="pattern-type bearish">看跌</span></div>
+                    <div class="pattern-card-desc">头肩底的反向形态，出现在上升趋势后，预示潜在的反转向下。</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 初始化变量
+        let currentChart;
+        const patternData = {
+            // 加特利形态 (看涨)
+            'gartley-bullish': {
+                title: '加特利形态 (看涨)',
+                type: 'bullish',
+                description: '加特利形态是一种经典的五点谐波形态，由Harold M. Gartley在1935年首次提出。看涨加特利形态出现在下降趋势后，预示潜在的反转向上的机会。',
+                characteristics: '形态呈现"M"或"W"形状，D点位于XA段的0.786回撤位，是潜在的反转区域。',
+                tradingSignal: '在D点附近出现看涨K线形态(如锤子线、早晨之星)时，可考虑做多，止损设在D点下方。',
+                accuracy: '高 - 加特利形态是谐波交易中最常用且可靠的形态之一。',
+                fibRatios: ['B点: XA的0.618', 'C点: AB的0.382-0.886', 'D点: XA的0.786'],
+                data: {
+                    labels: ['X', 'A', 'B', 'C', 'D'],
+                    datasets: [{
+                        label: '价格走势',
+                        data: [100, 70, 85, 75, 72],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: '看涨反转区',
+                        data: [null, null, null, null, 72],
+                        pointRadius: 10,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 0.3)',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        showLine: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            },
+                            title: {
+                                display: true,
+                                text: '价格',
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            },
+                            title: {
+                                display: true,
+                                text: '形态阶段',
+                                color: '#94a3b8'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            // 加特利形态 (看跌)
+            'gartley-bearish': {
+                title: '加特利形态 (看跌)',
+                type: 'bearish',
+                description: '看跌加特利形态出现在上升趋势后，预示潜在的反转向下的机会。它是看涨加特利形态的镜像。',
+                characteristics: '形态呈现"W"或"M"形状，D点位于XA段的0.786回撤位，是潜在的反转区域。',
+                tradingSignal: '在D点附近出现看跌K线形态(如射击之星、黄昏之星)时，可考虑做空，止损设在D点上方。',
+                accuracy: '高 - 加特利形态是谐波交易中最常用且可靠的形态之一。',
+                fibRatios: ['B点: XA的0.618', 'C点: AB的0.382-0.886', 'D点: XA的0.786'],
+                data: {
+                    labels: ['X', 'A', 'B', 'C', 'D'],
+                    datasets: [{
+                        label: '价格走势',
+                        data: [70, 100, 85, 95, 98],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: '看跌反转区',
+                        data: [null, null, null, null, 98],
+                        pointRadius: 10,
+                        pointBackgroundColor: 'rgba(239, 68, 68, 0.3)',
+                        pointBorderColor: '#ef4444',
+                        pointBorderWidth: 2,
+                        showLine: false
+                    }]
+                },
+                options: {}
+            },
+            // 蝙蝠形态 (看涨)
+            'bat-bullish': {
+                title: '蝙蝠形态 (看涨)',
+                type: 'bullish',
+                description: '蝙蝠形态由Scott Carney发现，D点位于XA的0.886回撤位。形态特点是B点通常超越XA的0.618回撤位。',
+                characteristics: 'D点位于XA的0.886回撤位，形态更陡峭，B点通常超越XA的0.618回撤位。',
+                tradingSignal: '在D点附近出现看涨K线形态时，可考虑做多，止损设在D点下方。',
+                accuracy: '高 - 蝙蝠形态在谐波交易中具有较高的可靠性。',
+                fibRatios: ['B点: XA的0.382-0.500', 'C点: AB的0.382-0.886', 'D点: XA的0.886'],
+                data: {
+                    labels: ['X', 'A', 'B', 'C', 'D'],
+                    datasets: [{
+                        label: '价格走势',
+                        data: [100, 65, 90, 70, 67],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: '看涨反转区',
+                        data: [null, null, null, null, 67],
+                        pointRadius: 10,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 0.3)',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        showLine: false
+                    }]
+                },
+                options: {}
+            },
+            // 螃蟹形态 (看涨)
+            'crab-bullish': {
+                title: '螃蟹形态 (看涨)',
+                type: 'bullish',
+                description: '螃蟹形态被认为是精度最高的谐波形态之一，D点位于XA的1.618扩展位，B点回撤较浅(0.382以内)。',
+                characteristics: 'D点位于XA的1.618扩展位，B点回撤较浅(0.382以内)，反转精度极高。',
+                tradingSignal: '在D点附近出现看涨K线形态时，可考虑做多，止损设在D点下方。',
+                accuracy: '极高 - 螃蟹形态以精确的反转点著称。',
+                fibRatios: ['B点: XA的0.382以内', 'C点: AB的0.382-0.886', 'D点: XA的1.618'],
+                data: {
+                    labels: ['X', 'A', 'B', 'C', 'D'],
+                    datasets: [{
+                        label: '价格走势',
+                        data: [100, 80, 85, 70, 60],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: '看涨反转区',
+                        data: [null, null, null, null, 60],
+                        pointRadius: 10,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 0.3)',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        showLine: false
+                    }]
+                },
+                options: {}
+            },
+            // 蝴蝶形态 (看涨)
+            'butterfly-bullish': {
+                title: '蝴蝶形态 (看涨)',
+                type: 'bullish',
+                description: '蝴蝶形态的D点位于XA的1.272或1.618扩展位，B点位于XA的0.786回撤位，常见于趋势末端。',
+                characteristics: 'D点位于XA的1.272或1.618扩展位，B点位于XA的0.786回撤位，常见于趋势末端。',
+                tradingSignal: '在D点附近出现看涨K线形态时，可考虑做多，止损设在D点下方。',
+                accuracy: '中高 - 蝴蝶形态在趋势末端具有较好的反转预测能力。',
+                fibRatios: ['B点: XA的0.786', 'C点: AB的0.382-0.886', 'D点: XA的1.272或1.618'],
+                data: {
+                    labels: ['X', 'A', 'B', 'C', 'D'],
+                    datasets: [{
+                        label: '价格走势',
+                        data: [100, 75, 95, 80, 65],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: '看涨反转区',
+                        data: [null, null, null, null, 65],
+                        pointRadius: 10,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 0.3)',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        showLine: false
+                    }]
+                },
+                options: {}
+            },
+            // AB=CD形态 (看涨)
+            'abcd-bullish': {
+                title: 'AB=CD形态 (看涨)',
+                type: 'bullish',
+                description: 'AB=CD形态是最简单的谐波形态，AB段与CD段在价格和时间上对称，C点位于AB的0.382-0.886回撤。',
+                characteristics: 'AB段与CD段在价格和时间上对称，C点位于AB的0.382-0.886回撤。',
+                tradingSignal: '在D点附近出现看涨K线形态时，可考虑做多，止损设在D点下方。',
+                accuracy: '中 - 形态简单，易于识别，但需要结合其他确认信号。',
+                fibRatios: ['AB = CD (价格等距)', 'C点: AB的0.382-0.886', '时间: AB ≈ CD'],
+                data: {
+                    labels: ['A', 'B', 'C', 'D'],
+                    datasets: [{
+                        label: '价格走势',
+                        data: [70, 90, 80, 100],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: '看涨反转区',
+                        data: [null, null, null, 100],
+                        pointRadius: 10,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 0.3)',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        showLine: false
+                    }]
+                },
+                options: {}
+            },
+            // 鲨鱼形态 (看涨)
+            'shark-bullish': {
+                title: '鲨鱼形态 (看涨)',
+                type: 'bullish',
+                description: '鲨鱼形态是相对较新的谐波形态，D点位于XA的1.13或1.618扩展位，B点回撤极浅(0.382以内)。',
+                characteristics: 'D点位于XA的1.13或1.618扩展位，B点回撤极浅(0.382以内)，形态较为激进。',
+                tradingSignal: '在D点附近出现看涨K线形态时，可考虑做多，止损设在D点下方。',
+                accuracy: '中 - 较新的形态，需要更多市场验证。',
+                fibRatios: ['B点: XA的0.382以内', 'C点: AB的0.382-0.886', 'D点: XA的1.13或1.618'],
+                data: {
+                    labels: ['X', 'A', 'B', 'C', 'D'],
+                    datasets: [{
+                        label: '价格走势',
+                        data: [100, 85, 88, 75, 65],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: '看涨反转区',
+                        data: [null, null, null, null, 65],
+                        pointRadius: 10,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 0.3)',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        showLine: false
+                    }]
+                },
+                options: {}
+            },
+            // 头肩底形态
+            'head-shoulders': {
+                title: '头肩底形态',
+                type: 'bullish',
+                description: '头肩底是经典的反转形态，由左肩、头部、右肩构成，颈线被突破后形成看涨信号。',
+                characteristics: '由左肩、头部、右肩构成，头部低于两肩，颈线被突破后确认形态完成。',
+                tradingSignal: '价格突破颈线并回踩确认时，可考虑做多，目标位为头部到颈线的垂直距离。',
+                accuracy: '高 - 头肩底是技术分析中最可靠的看涨反转形态之一。',
+                fibRatios: ['目标位: 头部到颈线距离', '回踩: 颈线支撑'],
+                data: {
+                    labels: ['左肩', '头部', '右肩', '突破', '回踩', '目标'],
+                    datasets: [{
+                        label: '价格走势',
+                        data: [90, 70, 90, 95, 92, 110],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: '颈线',
+                        data: [90, 90, 90, 90, 90, 90],
+                        borderColor: '#94a3b8',
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }, {
+                        label: '看涨反转区',
+                        data: [null, null, null, null, 92, null],
+                        pointRadius: 10,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 0.3)',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        showLine: false
+                    }]
+                },
+                options: {}
+            },
+            // 头肩顶形态
+            'head-shoulders-top': {
+                title: '头肩顶形态',
+                type: 'bearish',
+                description: '头肩顶是头肩底的反向形态，出现在上升趋势后，预示潜在的反转向下。',
+                characteristics: '由左肩、头部、右肩构成，头部高于两肩，颈线被突破后确认形态完成。',
+                tradingSignal: '价格突破颈线并回踩确认时，可考虑做空，目标位为头部到颈线的垂直距离。',
+                accuracy: '高 - 头肩顶是技术分析中最可靠的看跌反转形态之一。',
+                fibRatios: ['目标位: 头部到颈线距离', '回踩: 颈线阻力'],
+                data: {
+                    labels: ['左肩', '头部', '右肩', '突破', '回踩', '目标'],
+                    datasets: [{
+                        label: '价格走势',
+                        data: [70, 90, 70, 65, 68, 50],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }, {
+                        label: '颈线',
+                        data: [70, 70, 70, 70, 70, 70],
+                        borderColor: '#94a3b8',
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }, {
+                        label: '看跌反转区',
+                        data: [null, null, null, null, 68, null],
+                        pointRadius: 10,
+                        pointBackgroundColor: 'rgba(239, 68, 68, 0.3)',
+                        pointBorderColor: '#ef4444',
+                        pointBorderWidth: 2,
+                        showLine: false
+                    }]
+                },
+                options: {}
+            }
+        };
+
+        // 初始化图表
+        function initChart() {
+            const ctx = document.getElementById('harmonicChart').getContext('2d');
+            const initialPattern = 'gartley-bullish';
+            loadPattern(initialPattern);
+        }
+
+        // 加载形态数据
+        function loadPattern(patternId) {
+            const pattern = patternData[patternId];
+            
+            // 更新UI元素
+            document.getElementById('current-pattern-title').textContent = pattern.title;
+            document.getElementById('current-pattern-type').textContent = pattern.type === 'bullish' ? '看涨反转形态' : '看跌反转形态';
+            document.getElementById('current-pattern-type').className = `pattern-type ${pattern.type}`;
+            document.getElementById('description-title').textContent = `${pattern.title} 解析`;
+            document.getElementById('pattern-description-text').textContent = pattern.description;
+            document.getElementById('pattern-characteristics').textContent = pattern.characteristics;
+            document.getElementById('trading-signal').textContent = pattern.tradingSignal;
+            document.getElementById('pattern-accuracy').textContent = pattern.accuracy;
+            
+            // 更新斐波那契比率
+            const fibRatiosContainer = document.getElementById('fib-ratios');
+            fibRatiosContainer.innerHTML = '';
+            pattern.fibRatios.forEach(ratio => {
+                const span = document.createElement('span');
+                span.className = 'fib-ratio';
+                span.textContent = ratio;
+                fibRatiosContainer.appendChild(span);
+            });
+            
+            // 更新按钮状态
+            document.querySelectorAll('.pattern-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.pattern-btn[data-pattern="${patternId}"]`).classList.add('active');
+            
+            // 销毁现有图表
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            // 创建新图表
+            const ctx = document.getElementById('harmonicChart').getContext('2d');
+            
+            // 合并选项
+            const options = {
+                ...patternData['gartley-bullish'].options, // 基础选项
+                ...pattern.options // 特定形态选项
+            };
+            
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: pattern.data,
+                options: options
+            });
+        }
+
+        // 添加按钮点击事件
+        document.querySelectorAll('.pattern-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const patternId = this.getAttribute('data-pattern');
+                loadPattern(patternId);
+            });
+        });
+
+        // 添加卡片点击事件
+        document.querySelectorAll('.pattern-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const patternId = this.getAttribute('data-pattern');
+                loadPattern(patternId);
+            });
+        });
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initChart);
+    </script>
+</body>
+</html>
